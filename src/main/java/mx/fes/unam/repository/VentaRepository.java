@@ -14,6 +14,8 @@ public interface VentaRepository extends JpaRepository<VentaEntity, Long> {
 
     List<VentaEntity> findByVendedorId(Long vendedorId);
 
+    boolean existsByProductoId(Long productoId);
+
     List<VentaEntity> findByFechaBetween(LocalDateTime inicio, LocalDateTime fin);
 
     List<VentaEntity> findByFechaBetweenOrderByFechaDesc(LocalDateTime inicio, LocalDateTime fin);

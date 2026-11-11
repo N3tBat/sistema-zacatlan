@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <!-- Alertas de éxito y error -->
+    <div th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${exito}">Operación exitosa</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">Ocurrió un error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h4 class="m-0 fw-bold text-primary">Catálogo de Productos</h4>
+            <a th:href="@{/producto/alta}" class="btn btn-primary btn-sm">
+                + Nuevo Producto
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 60px;">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col" style="width: 130px;" class="text-center">Forma de venta</th>
+                            <th scope="col" style="width: 120px;" class="text-end">Precio unidad</th>
+                            <th scope="col" style="width: 120px;" class="text-end">Precio bloque</th>
+                            <th scope="col" style="width: 120px;" class="text-center">Uds. por bloque</th>
+                            <th scope="col" style="width: 100px;" class="text-center">Estado</th>
+                            <th scope="col" style="width: 200px;" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(productos)}">
+                            <td colspan="9" class="text-center py-4 text-muted">No hay productos registrados.</td>
+                        </tr>
+                        <tr th:each="p : ${productos}">
+                            <td class="fw-semibold" th:text="${p.id}">1</td>
+                            <td class="fw-semibold" th:text="${p.nombre}">Manzana Royale</td>
+                            <td class="text-muted small"
+                                th:text="${p.descripcion != null and !p.descripcion.isEmpty() ? p.descripcion : '—'}">
+                                Caja de manzana
+                            </td>
+                            <td class="text-center">
+                                <span th:if="${p.formaVenta?.name() == 'BLOQUE'}" class="badge bg-info text-dark">BLOQUE</span>
+                                <span th:if="${p.formaVenta?.name() == 'UNIDAD'}" class="badge bg-secondary">UNIDAD</span>
+                            </td>
+                            <td class="text-end"
+                                th:text="${p.precioUnidad != null ? '$' + #numbers.formatDecimal(p.precioUnidad, 1, 2) : '—'}">
+                                $15.00
+                            </td>
+                            <td class="text-end"
+                                th:text="${p.precioBloque != null ? '$' + #numbers.formatDecimal(p.precioBloque, 1, 2) : '—'}">
+                                $450.00
+                            </td>
+                            <td class="text-center" th:text="${p.unidadesPorBloque != null ? p.unidadesPorBloque : '—'}">20</td>
+                            <td class="text-center">
+                                <span th:if="${p.activo}" class="badge bg-success">Activo</span>
+                                <span th:unless="${p.activo}" class="badge bg-danger">Inactivo</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/producto/modificar/{id}(id=${p.id})}" class="btn btn-warning btn-sm">
+                                        Modificar
+                                    </a>
+                                    <form th:action="@{/producto/eliminar/{id}(id=${p.id})}" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Está seguro de eliminar este producto? No será posible si ya tiene ventas registradas.');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+</body>
+</html>
