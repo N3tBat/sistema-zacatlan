@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <!-- Alertas de éxito y error -->
+    <div th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${exito}">Operación exitosa</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">Ocurrió un error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h4 class="m-0 fw-bold text-primary" th:text="${esAdmin ? 'Ventas del Municipio' : 'Mis Ventas'}">
+                Ventas
+            </h4>
+            <a th:href="@{/venta/alta}" class="btn btn-primary btn-sm">
+                + Nueva Venta
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 60px;">ID</th>
+                            <th scope="col" style="width: 160px;">Fecha</th>
+                            <th scope="col">Vendedor</th>
+                            <th sec:authorize="hasRole('ADMIN')" scope="col">Bloque</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col" style="width: 110px;" class="text-center">Cantidad</th>
+                            <th scope="col" style="width: 120px;" class="text-end">Precio aplicado</th>
+                            <th scope="col" style="width: 120px;" class="text-end">Total</th>
+                            <!-- Última modificación (bitácora del admin): solo ADMIN -->
+                            <th sec:authorize="hasRole('ADMIN')" scope="col">Última modificación</th>
+                            <th sec:authorize="hasRole('ADMIN')" scope="col" style="width: 110px;" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(ventas)}">
+                            <td colspan="10" class="text-center py-4 text-muted">No hay ventas registradas.</td>
+                        </tr>
+                        <tr th:each="v : ${ventas}">
+                            <td class="fw-semibold" th:text="${v.id}">1</td>
+                            <td th:text="${v.fecha != null ? #temporals.format(v.fecha, 'dd/MM/yyyy HH:mm') : '—'}">
+                                10/11/2026 12:00
+                            </td>
+                            <!-- Snapshot del vendedor: sigue listándose aunque se haya borrado -->
+                            <td th:text="${v.vendedorNombre != null ? v.vendedorNombre : '—'}">Carlos Hernández López</td>
+                            <td sec:authorize="hasRole('ADMIN')"
+                                th:text="${v.bloqueNombre != null ? v.bloqueNombre : '—'}">Zona Centro</td>
+                            <td th:text="${v.productoNombre != null ? v.productoNombre : '—'}">Manzana Royale</td>
+                            <td class="text-center" th:text="${v.cantidad}">2</td>
+                            <td class="text-end" th:text="${'$' + #numbers.formatDecimal(v.precioAplicado, 1, 2)}">$450.00</td>
+                            <td class="text-end fw-semibold" th:text="${'$' + #numbers.formatDecimal(v.total, 1, 2)}">$900.00</td>
+                            <!-- Bitácora: texto concatenado del admin que movió/modificó la venta -->
+                            <td sec:authorize="hasRole('ADMIN')">
+                                <div th:if="${v.movimiento != null}">
+                                    <span class="small text-muted d-block" style="max-width: 320px;"
+                                          th:text="${v.movimiento}">
+                                        ADMIN 1 (admin) | MODIFICÓ VENTA 12 | cantidad: 2 → 3
+                                    </span>
+                                    <span class="small text-muted fst-italic"
+                                          th:if="${v.fechaModificacion != null}"
+                                          th:text="${#temporals.format(v.fechaModificacion, 'dd/MM/yyyy HH:mm')}">
+                                        10/11/2026 13:30
+                                    </span>
+                                </div>
+                                <span th:if="${v.movimiento == null}" class="text-muted">—</span>
+                            </td>
+                            <td sec:authorize="hasRole('ADMIN')" class="text-center">
+                                <a th:href="@{/venta/modificar/{id}(id=${v.id})}" class="btn btn-warning btn-sm">
+                                    Modificar
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+</body>
+</html>
