@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="m-0 fw-bold text-primary">
+                        Modificar Venta <span th:text="${venta.id}">#1</span>
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/venta/modificar/{id}(id=${venta.id})}" th:object="${venta}" method="post">
+                        <input type="hidden" th:field="*{id}">
+                        <input type="hidden" name="vendedorId" th:value="${venta.vendedorId}">
+
+                        <!-- Alerta de error de negocio -->
+                        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">
+                            Error
+                        </div>
+
+                        <!-- Datos no editables de la venta -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Vendedor</label>
+                                <input type="text" class="form-control bg-light" readonly
+                                       th:value="${venta.vendedorNombre != null ? venta.vendedorNombre : '—'}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Fecha de registro</label>
+                                <input type="text" class="form-control bg-light" readonly
+                                       th:value="${venta.fecha != null ? #temporals.format(venta.fecha, 'dd/MM/yyyy HH:mm') : '—'}">
+                            </div>
+                        </div>
+
+                        <!-- Producto -->
+                        <div class="mb-3">
+                            <label for="productoId" class="form-label">Producto <span class="text-danger">*</span></label>
+                            <select id="productoId" class="form-select" th:field="*{productoId}"
+                                    th:classappend="${#fields.hasErrors('productoId')} ? 'is-invalid' : ''">
+                                <option th:each="p : ${productos}" th:value="${p.id}"
+                                        th:text="${p.nombre}"
+                                        th:selected="${p.id == venta.productoId}"
+                                        th:attr="data-forma=${p.formaVenta},
+                                                 data-precio-unidad=${p.precioUnidad},
+                                                 data-precio-bloque=${p.precioBloque},
+                                                 data-unidades-por-bloque=${p.unidadesPorBloque}">
+                                    Manzana Royale
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('productoId')}" th:errors="*{productoId}">
+                                Error en producto
+                            </div>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="mb-3">
+                            <label for="cantidad" id="labelCantidad" class="form-label">Cantidad <span class="text-danger">*</span></label>
+                            <input type="number" min="1" step="1" id="cantidad" class="form-control"
+                                   th:field="*{cantidad}"
+                                   th:classappend="${#fields.hasErrors('cantidad')} ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('cantidad')}" th:errors="*{cantidad}">
+                                Error en cantidad
+                            </div>
+                        </div>
+
+                        <!-- Precio aplicado -->
+                        <div class="mb-4">
+                            <label for="precioAplicado" class="form-label">Precio aplicado (MXN) <span class="text-danger">*</span></label>
+                            <input type="number" min="0.01" step="0.01" id="precioAplicado" class="form-control"
+                                   th:field="*{precioAplicado}"
+                                   th:classappend="${#fields.hasErrors('precioAplicado')} ? 'is-invalid' : ''">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('precioAplicado')}" th:errors="*{precioAplicado}">
+                                Error en precio aplicado
+                            </div>
+                        </div>
+
+                        <!-- Total en vivo -->
+                        <div class="mb-4">
+                            <label for="totalVivo" class="form-label">Total</label>
+                            <input type="text" id="totalVivo" class="form-control bg-white" readonly value="$0.00">
+                            <div class="form-text">
+                                El total definitivo lo recalcula el servidor; el cambio quedá registrado en la bitácora
+                                de la venta con su usuario de administrador.
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a th:href="@{/venta/ver}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-warning">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+
+<script>
+    // Mismo comportamiento dinámico del alta: al cambiar el producto se
+    // actualiza la etiqueta de cantidad y el precio de referencia.
+    const selectProducto = document.getElementById('productoId');
+    const inputCantidad = document.getElementById('cantidad');
+    const inputPrecio = document.getElementById('precioAplicado');
+    const inputTotal = document.getElementById('totalVivo');
+    const labelCantidad = document.getElementById('labelCantidad');
+
+    function actualizarPorProducto() {
+        const opt = selectProducto.options[selectProducto.selectedIndex];
+        if (!opt) return;
+        if (opt.dataset.forma === 'BLOQUE') {
+            labelCantidad.innerHTML = 'Número de bloques <span class="text-danger">*</span>';
+        } else {
+            labelCantidad.innerHTML = 'Número de unidades <span class="text-danger">*</span>';
+        }
+        actualizarTotal();
+    }
+
+    function actualizarTotal() {
+        const cantidad = parseFloat(inputCantidad.value) || 0;
+        const precio = parseFloat(inputPrecio.value) || 0;
+        inputTotal.value = '$' + (cantidad * precio).toFixed(2);
+    }
+
+    selectProducto.addEventListener('change', actualizarPorProducto);
+    inputCantidad.addEventListener('input', actualizarTotal);
+    inputPrecio.addEventListener('input', actualizarTotal);
+
+    actualizarPorProducto();
+    actualizarTotal();
+</script>
+</body>
+</html>
