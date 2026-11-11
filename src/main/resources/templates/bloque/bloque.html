@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <!-- Alertas -->
+    <div th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${exito}">Operación exitosa</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">Ocurrió un error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h4 class="m-0 fw-bold text-primary">Gestión de Bloques</h4>
+            <a th:href="@{/bloque/alta}" class="btn btn-primary btn-sm">
+                + Nuevo Bloque
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 80px;">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col" style="width: 120px;" class="text-center">Estado</th>
+                            <th scope="col" style="width: 200px;" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(bloques)}">
+                            <td colspan="5" class="text-center py-4 text-muted">No hay bloques registrados.</td>
+                        </tr>
+                        <tr th:each="b : ${bloques}">
+                            <td class="fw-semibold" th:text="${b.id}">1</td>
+                            <td th:text="${b.nombre}">Zona Centro</td>
+                            <td th:text="${b.descripcion != null and !b.descripcion.isEmpty() ? b.descripcion : '—'}">Comercio del centro</td>
+                            <td class="text-center">
+                                <span th:if="${b.activo}" class="badge bg-success">Activo</span>
+                                <span th:unless="${b.activo}" class="badge bg-danger">Inactivo</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/bloque/modificar/{id}(id=${b.id})}" class="btn btn-warning btn-sm">
+                                        Modificar
+                                    </a>
+                                    <form th:action="@{/bloque/eliminar/{id}(id=${b.id})}" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Está seguro de eliminar este bloque?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+</body>
+</html>

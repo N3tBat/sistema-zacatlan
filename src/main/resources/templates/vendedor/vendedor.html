@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <!-- Alertas de éxito y error -->
+    <div th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${exito}">Operación exitosa</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">Ocurrió un error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h4 class="m-0 fw-bold text-primary">Gestión de Vendedores</h4>
+            <a th:href="@{/vendedor/alta}" class="btn btn-primary btn-sm">
+                + Nuevo Vendedor
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 60px;">ID</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Bloque</th>
+                            <th scope="col" style="width: 100px;" class="text-center">Estado</th>
+                            <th scope="col" style="width: 160px;">Fecha Baja</th>
+                            <th scope="col" style="width: 260px;" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(vendedores)}">
+                            <td colspan="9" class="text-center py-4 text-muted">No hay vendedores registrados.</td>
+                        </tr>
+                        <tr th:each="v : ${vendedores}">
+                            <td class="fw-semibold" th:text="${v.id}">1</td>
+                            <td th:text="${v.nombre + ' ' + v.apellidos}">Juan Pérez</td>
+                            <td th:text="${v.username}">vendedor1</td>
+                            <td th:text="${v.telefono != null and !v.telefono.isEmpty() ? v.telefono : '—'}">7971234567</td>
+                            <td th:text="${v.email != null and !v.email.isEmpty() ? v.email : '—'}">juan@ejemplo.com</td>
+                            <td>
+                                <span th:if="${v.bloqueNombre != null}" class="badge bg-light text-dark border" th:text="${v.bloqueNombre}">Zona Centro</span>
+                                <span th:unless="${v.bloqueNombre != null}" class="text-muted fst-italic">Sin bloque</span>
+                            </td>
+                            <td class="text-center">
+                                <span th:if="${v.activo}" class="badge bg-success">Activo</span>
+                                <span th:unless="${v.activo}" class="badge bg-danger">Inactivo</span>
+                            </td>
+                            <td>
+                                <span th:if="${v.fechaBaja != null}" th:text="${#temporals.format(v.fechaBaja, 'dd/MM/yyyy HH:mm')}">01/11/2026 10:00</span>
+                                <span th:unless="${v.fechaBaja != null}">—</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/vendedor/modificar/{id}(id=${v.id})}" class="btn btn-warning btn-sm">
+                                        Modificar
+                                    </a>
+
+                                    <!-- Desactivar (si activo) -->
+                                    <form th:if="${v.activo}" th:action="@{/vendedor/desactivar/{id}(id=${v.id})}" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Desea desactivar a este vendedor? Ya no podrá realizar movimientos ni acceder al sistema.');">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                            Desactivar
+                                        </button>
+                                    </form>
+
+                                    <!-- Reactivar (si inactivo) -->
+                                    <form th:unless="${v.activo}" th:action="@{/vendedor/reactivar/{id}(id=${v.id})}" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Desea reactivar a este vendedor?');">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            Reactivar
+                                        </button>
+                                    </form>
+
+                                    <!-- Eliminar -->
+                                    <form th:action="@{/vendedor/eliminar/{id}(id=${v.id})}" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Está seguro de eliminar permanentemente a este vendedor? Sus ventas históricas se conservarán con su nombre.');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+</body>
+</html>

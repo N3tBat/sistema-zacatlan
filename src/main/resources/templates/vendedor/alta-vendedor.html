@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <!-- Alerta de error general (ej. username o email duplicado) -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}">Error en la operación</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="m-0 fw-bold text-primary" th:text="${esEdicion ? 'Modificar Vendedor' : 'Nuevo Vendedor'}">
+                        Formulario de Vendedor
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/vendedor/salvar}" th:object="${vendedor}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <div class="row g-3">
+                            <!-- Nombre -->
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" id="nombre" class="form-control"
+                                       th:field="*{nombre}"
+                                       th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid' : ''"
+                                       placeholder="Ej. Juan">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">
+                                    Error en nombre
+                                </div>
+                            </div>
+
+                            <!-- Apellidos -->
+                            <div class="col-md-6">
+                                <label for="apellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
+                                <input type="text" id="apellidos" class="form-control"
+                                       th:field="*{apellidos}"
+                                       th:classappend="${#fields.hasErrors('apellidos')} ? 'is-invalid' : ''"
+                                       placeholder="Ej. Pérez García">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}">
+                                    Error en apellidos
+                                </div>
+                            </div>
+
+                            <!-- Usuario -->
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Nombre de Usuario <span class="text-danger">*</span></label>
+                                <input type="text" id="username" class="form-control"
+                                       th:field="*{username}"
+                                       th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''"
+                                       placeholder="Ej. vendedor1">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">
+                                    Error en usuario
+                                </div>
+                            </div>
+
+                            <!-- Contraseña -->
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">
+                                    Contraseña
+                                    <span th:if="${!esEdicion}" class="text-danger">*</span>
+                                </label>
+                                <input type="password" id="password" name="password" class="form-control"
+                                       th:classappend="${passwordError != null} ? 'is-invalid' : ''"
+                                       placeholder="••••••••">
+                                <div class="invalid-feedback" th:if="${passwordError != null}" th:text="${passwordError}">
+                                    La contraseña es obligatoria.
+                                </div>
+                                <div class="form-text" th:if="${esEdicion}">
+                                    Dejar en blanco para conservar la contraseña actual.
+                                </div>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="col-md-6">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" id="telefono" class="form-control"
+                                       th:field="*{telefono}"
+                                       th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid' : ''"
+                                       placeholder="Ej. 7971234567 (10 dígitos)">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}">
+                                    Error en teléfono
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Correo Electrónico</label>
+                                <input type="email" id="email" class="form-control"
+                                       th:field="*{email}"
+                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                                       placeholder="juan@ejemplo.com">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">
+                                    Error en email
+                                </div>
+                            </div>
+
+                            <!-- Bloque -->
+                            <div class="col-12">
+                                <label for="bloqueId" class="form-label">Bloque Asignado</label>
+                                <select id="bloqueId" th:field="*{bloqueId}" class="form-select">
+                                    <option value="">-- Sin bloque asignado --</option>
+                                    <option th:each="b : ${bloques}" th:value="${b.id}" th:text="${b.nombre}">
+                                        Zona Centro
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    Solo se muestran bloques activos disponibles para asignación.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a th:href="@{/vendedor/ver}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+</body>
+</html>
