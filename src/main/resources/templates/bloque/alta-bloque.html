@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="m-0 fw-bold text-primary" th:text="${esEdicion ? 'Modificar Bloque' : 'Nuevo Bloque'}">
+                        Formulario de Bloque
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/bloque/salvar}" th:object="${bloque}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <!-- Campo Nombre -->
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del Bloque <span class="text-danger">*</span></label>
+                            <input type="text" id="nombre" class="form-control"
+                                   th:field="*{nombre}"
+                                   th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid' : ''"
+                                   placeholder="Ej. Zona Centro">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">
+                                Error en nombre
+                            </div>
+                        </div>
+
+                        <!-- Campo Descripción -->
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea id="descripcion" class="form-control" rows="3"
+                                      th:field="*{descripcion}"
+                                      th:classappend="${#fields.hasErrors('descripcion')} ? 'is-invalid' : ''"
+                                      placeholder="Descripción de la zona o sección"></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}">
+                                Error en descripción
+                            </div>
+                        </div>
+
+                        <!-- Campo Activo -->
+                        <div class="mb-4 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="activo" th:field="*{activo}">
+                            <label class="form-check-label" for="activo">Bloque activo</label>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a th:href="@{/bloque/ver}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+</body>
+</html>

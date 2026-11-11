@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/bootstrap/css/bootstrap.min.css}">
+    <title>Sistema Zacatlán</title>
+</head>
+<body>
+<header th:fragment="header">
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" th:href="@{/}">Sistema Zacatlán</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Bloques: Solo ADMIN -->
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Bloques
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/bloque/ver}">Lista de Bloques</a></li>
+                        <li><a class="dropdown-item" th:href="@{/bloque/alta}">Nuevo Bloque</a></li>
+                    </ul>
+                </li>
+                <!-- Vendedores: Solo ADMIN -->
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Vendedores
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/vendedor/ver}">Lista de Vendedores</a></li>
+                        <li><a class="dropdown-item" th:href="@{/vendedor/alta}">Nuevo Vendedor</a></li>
+                    </ul>
+                </li>
+                <!-- Productos: Solo ADMIN -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/producto/ver}">Productos</a>
+                </li>
+                <!-- Ventas: ADMIN o VENDEDOR -->
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'VENDEDOR')">
+                    <a class="nav-link" th:href="@{/venta/ver}">Ventas</a>
+                </li>
+                <!-- Reportes: Solo ADMIN -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/reporte/diario}">Reportes</a>
+                </li>
+            </ul>
+            <!-- Botón de cerrar sesión con el nombre del usuario / Iniciar sesión -->
+            <div class="d-flex align-items-center" sec:authorize="isAuthenticated()">
+                <span class="navbar-text me-3">
+                    Usuario: <strong sec:authentication="name"></strong>
+                </span>
+                <form th:action="@{/logout}" method="post" class="d-inline m-0 p-0">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar sesión</button>
+                </form>
+            </div>
+            <div class="d-flex align-items-center" sec:authorize="!isAuthenticated()">
+                <a th:href="@{/login}" class="btn btn-outline-primary btn-sm">Iniciar sesión</a>
+            </div>
+        </div>
+    </div>
+</nav>
+</header>
+<footer th:fragment="footer">
+    <script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</footer>
+</body>
+</html>
