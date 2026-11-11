@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="m-0 fw-bold text-primary" th:text="${esEdicion ? 'Modificar Producto' : 'Nuevo Producto'}">
+                        Formulario de Producto
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/producto/salvar}" th:object="${producto}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <!-- Alerta de error de negocio -->
+                        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">
+                            Error
+                        </div>
+
+                        <!-- Campo Nombre -->
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
+                            <input type="text" id="nombre" class="form-control"
+                                   th:field="*{nombre}"
+                                   th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid' : ''"
+                                   placeholder="Ej. Manzana Royale">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">
+                                Error en nombre
+                            </div>
+                        </div>
+
+                        <!-- Campo Descripción -->
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea id="descripcion" class="form-control" rows="2"
+                                      th:field="*{descripcion}"
+                                      th:classappend="${#fields.hasErrors('descripcion')} ? 'is-invalid' : ''"
+                                      placeholder="Descripción del producto"></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}">
+                                Error en descripción
+                            </div>
+                        </div>
+
+                        <!-- Forma de venta: define qué campos se muestran -->
+                        <div class="mb-3">
+                            <label for="formaVenta" class="form-label">Forma de venta <span class="text-danger">*</span></label>
+                            <select id="formaVenta" class="form-select" th:field="*{formaVenta}"
+                                    th:classappend="${#fields.hasErrors('formaVenta')} ? 'is-invalid' : ''">
+                                <option value="BLOQUE">Por bloque (caja, costal o paquete)</option>
+                                <option value="UNIDAD">Por unidad (pieza)</option>
+                            </select>
+                            <div class="form-text">Determina cómo se capturan las ventas de este producto.</div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('formaVenta')}" th:errors="*{formaVenta}">
+                                Error en forma de venta
+                            </div>
+                        </div>
+
+                        <!-- Campos para venta por UNIDAD -->
+                        <div class="mb-3" id="grupoUnidad">
+                            <label for="precioUnidad" class="form-label">Precio por unidad (MXN) <span class="text-danger">*</span></label>
+                            <input type="number" min="0.01" step="0.01" id="precioUnidad" class="form-control"
+                                   th:field="*{precioUnidad}"
+                                   th:classappend="${#fields.hasErrors('precioUnidad')} ? 'is-invalid' : ''"
+                                   placeholder="Ej. 15.00">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('precioUnidad')}" th:errors="*{precioUnidad}">
+                                Error en precio por unidad
+                            </div>
+                        </div>
+
+                        <!-- Campos para venta por BLOQUE -->
+                        <div id="grupoBloque">
+                            <div class="mb-3">
+                                <label for="precioBloque" class="form-label">Precio por bloque (MXN) <span class="text-danger">*</span></label>
+                                <input type="number" min="0.01" step="0.01" id="precioBloque" class="form-control"
+                                       th:field="*{precioBloque}"
+                                       th:classappend="${#fields.hasErrors('precioBloque')} ? 'is-invalid' : ''"
+                                       placeholder="Ej. 450.00">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('precioBloque')}" th:errors="*{precioBloque}">
+                                    Error en precio por bloque
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="unidadesPorBloque" class="form-label">Unidades por bloque <span class="text-danger">*</span></label>
+                                <input type="number" min="1" step="1" id="unidadesPorBloque" class="form-control"
+                                       th:field="*{unidadesPorBloque}"
+                                       th:classappend="${#fields.hasErrors('unidadesPorBloque')} ? 'is-invalid' : ''"
+                                       placeholder="Ej. 20">
+                                <div class="form-text">Cuántas unidades (piezas) agrupa un bloque.</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('unidadesPorBloque')}" th:errors="*{unidadesPorBloque}">
+                                    Error en unidades por bloque
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo Activo -->
+                        <div class="mb-4 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="activo" th:field="*{activo}">
+                            <label class="form-check-label" for="activo">Producto activo</label>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a th:href="@{/producto/ver}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+
+<script>
+    // Conmuta los campos de precio según la forma de venta elegida
+    const selectFormaVenta = document.getElementById('formaVenta');
+    const grupoUnidad = document.getElementById('grupoUnidad');
+    const grupoBloque = document.getElementById('grupoBloque');
+
+    function actualizarFormaVenta() {
+        const esBloque = selectFormaVenta.value === 'BLOQUE';
+        grupoBloque.style.display = esBloque ? '' : 'none';
+        grupoUnidad.style.display = esBloque ? 'none' : '';
+    }
+
+    selectFormaVenta.addEventListener('change', actualizarFormaVenta);
+    actualizarFormaVenta();
+</script>
+</body>
+</html>

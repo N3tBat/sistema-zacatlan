@@ -23,6 +23,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/bootstrap/**").permitAll()
                 .requestMatchers("/bloque/**", "/vendedor/**", "/producto/**", "/reporte/**").hasRole("ADMIN")
+                // Modificar ventas es exclusivo del ADMIN (regla de la especificación)
+                .requestMatchers("/venta/modificar/**").hasRole("ADMIN")
                 .requestMatchers("/venta/**").hasAnyRole("ADMIN", "VENDEDOR")
                 .anyRequest().authenticated()
             )
