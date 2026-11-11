@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+<head th:replace="~{plantillas/plantilla :: head}"></head>
+<body class="bg-light">
+<header th:replace="~{plantillas/plantilla :: header}"></header>
+
+<main class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="m-0 fw-bold text-primary">Registrar Nueva Venta</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/venta/salvar}" th:object="${venta}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <!-- Alerta de error de negocio -->
+                        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">
+                            Error
+                        </div>
+
+                        <!-- Vendedor -->
+                        <div class="mb-3" th:if="${esAdmin}">
+                            <label for="vendedorId" class="form-label">Vendedor <span class="text-danger">*</span></label>
+                            <select id="vendedorId" class="form-select" th:field="*{vendedorId}"
+                                    th:classappend="${#fields.hasErrors('vendedorId')} ? 'is-invalid' : ''">
+                                <option value="">Seleccione un vendedor...</option>
+                                <option th:each="v : ${vendedores}" th:value="${v.id}"
+                                        th:text="${v.nombre + ' ' + v.apellidos + ' (@' + v.username + ')'}">
+                                    Carlos Hernández López (@vendedor1)
+                                </option>
+                            </select>
+                            <div class="form-text">Solo se listan vendedores activos.</div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('vendedorId')}" th:errors="*{vendedorId}">
+                                Error en vendedor
+                            </div>
+                        </div>
+                        <div class="mb-3" th:unless="${esAdmin}">
+                            <label for="vendedorFijo" class="form-label">Vendedor</label>
+                            <input type="text" id="vendedorFijo" class="form-control" readonly
+                                   th:value="${vendedorPropio != null ? vendedorPropio.nombre + ' ' + vendedorPropio.apellidos : ''}">
+                            <input type="hidden" th:field="*{vendedorId}">
+                            <div class="form-text">Las ventas se registran a su nombre.</div>
+                        </div>
+
+                        <!-- Producto: sus datos viajan en atributos data-* para alimentar el JS -->
+                        <div class="mb-3">
+                            <label for="productoId" class="form-label">Producto <span class="text-danger">*</span></label>
+                            <select id="productoId" class="form-select" th:field="*{productoId}"
+                                    th:classappend="${#fields.hasErrors('productoId')} ? 'is-invalid' : ''">
+                                <option value="">Seleccione un producto...</option>
+                                <option th:each="p : ${productos}" th:value="${p.id}"
+                                        th:text="${p.nombre}"
+                                        th:attr="data-forma=${p.formaVenta},
+                                                 data-precio-unidad=${p.precioUnidad},
+                                                 data-precio-bloque=${p.precioBloque},
+                                                 data-unidades-por-bloque=${p.unidadesPorBloque}">
+                                    Manzana Royale
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('productoId')}" th:errors="*{productoId}">
+                                Error en producto
+                            </div>
+                        </div>
+
+                        <!-- Info dinámica del producto seleccionado -->
+                        <div id="infoProducto" class="mb-3 p-3 border rounded bg-light" style="display: none;">
+                            <span id="infoTexto" class="small"></span>
+                        </div>
+
+                        <!-- Cantidad: la etiqueta conmuta según la forma de venta del producto -->
+                        <div class="mb-3">
+                            <label for="cantidad" id="labelCantidad" class="form-label">Cantidad <span class="text-danger">*</span></label>
+                            <input type="number" min="1" step="1" id="cantidad" class="form-control"
+                                   th:field="*{cantidad}"
+                                   th:classappend="${#fields.hasErrors('cantidad')} ? 'is-invalid' : ''"
+                                   placeholder="Ej. 2">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('cantidad')}" th:errors="*{cantidad}">
+                                Error en cantidad
+                            </div>
+                        </div>
+
+                        <!-- Precio aplicado: editable (el vendedor puede ajustarlo en esta venta) -->
+                        <div class="mb-3">
+                            <label for="precioAplicado" class="form-label">Precio aplicado (MXN) <span class="text-danger">*</span></label>
+                            <input type="number" min="0.01" step="0.01" id="precioAplicado" class="form-control"
+                                   th:field="*{precioAplicado}"
+                                   th:classappend="${#fields.hasErrors('precioAplicado')} ? 'is-invalid' : ''"
+                                   placeholder="Ej. 450.00">
+                            <div class="form-text">
+                                Se precarga con el precio del catálogo, pero el vendedor puede ajustarlo solo para esta venta.
+                                El catálogo del municipio no se modifica.
+                            </div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('precioAplicado')}" th:errors="*{precioAplicado}">
+                                Error en precio aplicado
+                            </div>
+                        </div>
+
+                        <!-- Total en vivo (solo referencia; el definitivo lo calcula el servidor) -->
+                        <div class="mb-4">
+                            <label for="totalVivo" class="form-label">Total</label>
+                            <input type="text" id="totalVivo" class="form-control bg-white" readonly value="$0.00">
+                            <div class="form-text">El total definitivo lo calcula el servidor al guardar la venta.</div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a th:href="@{/venta/ver}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Registrar Venta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{plantillas/plantilla :: footer}"></footer>
+
+<script>
+    // ------------------------------------------------------------------
+    // Formulario dinámico de venta: la vista cambia según la forma de
+    // venta del producto elegido (BLOQUE vs UNIDAD) y calcula el total
+    // en vivo. El precio es editable por el vendedor.
+    // ------------------------------------------------------------------
+    const selectProducto = document.getElementById('productoId');
+    const inputCantidad = document.getElementById('cantidad');
+    const inputPrecio = document.getElementById('precioAplicado');
+    const inputTotal = document.getElementById('totalVivo');
+    const labelCantidad = document.getElementById('labelCantidad');
+    const infoProducto = document.getElementById('infoProducto');
+    const infoTexto = document.getElementById('infoTexto');
+
+    function opcionSeleccionada() {
+        const opt = selectProducto.options[selectProducto.selectedIndex];
+        return (opt && opt.value !== '') ? opt : null;
+    }
+
+    function actualizarPorProducto() {
+        const opt = opcionSeleccionada();
+        if (!opt) {
+            infoProducto.style.display = 'none';
+            labelCantidad.innerHTML = 'Cantidad <span class="text-danger">*</span>';
+            return;
+        }
+        const forma = opt.dataset.forma;
+        if (forma === 'BLOQUE') {
+            labelCantidad.innerHTML = 'Número de bloques <span class="text-danger">*</span>';
+            inputPrecio.value = opt.dataset.precioBloque || '';
+            infoTexto.textContent = 'Se vende por BLOQUE — ' +
+                (opt.dataset.unidadesPorBloque || '?') + ' unidades por bloque — ' +
+                'precio por bloque: $' + (opt.dataset.precioBloque || '0');
+        } else {
+            labelCantidad.innerHTML = 'Número de unidades <span class="text-danger">*</span>';
+            inputPrecio.value = opt.dataset.precioUnidad || '';
+            infoTexto.textContent = 'Se vende por UNIDAD — precio por unidad: $' + (opt.dataset.precioUnidad || '0');
+        }
+        infoProducto.style.display = '';
+        actualizarTotal();
+    }
+
+    function actualizarTotal() {
+        const cantidad = parseFloat(inputCantidad.value) || 0;
+        const precio = parseFloat(inputPrecio.value) || 0;
+        inputTotal.value = '$' + (cantidad * precio).toFixed(2);
+    }
+
+    selectProducto.addEventListener('change', actualizarPorProducto);
+    inputCantidad.addEventListener('input', actualizarTotal);
+    inputPrecio.addEventListener('input', actualizarTotal);
+
+    // Estado inicial (también restaura la selección al volver de un error)
+    actualizarPorProducto();
+    actualizarTotal();
+</script>
+</body>
+</html>
