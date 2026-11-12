@@ -18,11 +18,10 @@
     </div>
 
     <!-- Accesos rápidos para el ADMINISTRADOR (municipio) -->
-    <div class="row g-4" sec:authorize="hasRole('ADMIN')">
+    <div class="row g-4 justify-content-center" sec:authorize="hasRole('ADMIN')">
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">🗺️</div>
                     <h6 class="card-title fw-bold mt-2">Bloques</h6>
                     <p class="card-text small text-muted">Zonas del municipio</p>
                     <a th:href="@{/bloque/ver}" class="btn btn-outline-primary btn-sm">Ver bloques</a>
@@ -32,7 +31,6 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">🧑‍🌾</div>
                     <h6 class="card-title fw-bold mt-2">Vendedores</h6>
                     <p class="card-text small text-muted">Comerciantes autorizados</p>
                     <a th:href="@{/vendedor/ver}" class="btn btn-outline-primary btn-sm">Ver vendedores</a>
@@ -42,7 +40,6 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">📦</div>
                     <h6 class="card-title fw-bold mt-2">Productos</h6>
                     <p class="card-text small text-muted">Catálogo del municipio</p>
                     <a th:href="@{/producto/ver}" class="btn btn-outline-primary btn-sm">Ver productos</a>
@@ -52,7 +49,6 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">🧾</div>
                     <h6 class="card-title fw-bold mt-2">Ventas</h6>
                     <p class="card-text small text-muted">Todas las ventas y bitácora</p>
                     <a th:href="@{/venta/ver}" class="btn btn-outline-primary btn-sm">Ver ventas</a>
@@ -62,7 +58,6 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">📊</div>
                     <h6 class="card-title fw-bold mt-2">Reporte diario</h6>
                     <p class="card-text small text-muted">Detalle del día + PDF</p>
                     <a th:href="@{/reporte/diario}" class="btn btn-outline-primary btn-sm">Ver reporte</a>
@@ -72,7 +67,6 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">➕</div>
                     <h6 class="card-title fw-bold mt-2">Nueva venta</h6>
                     <p class="card-text small text-muted">Registrar venta de cualquier vendedor</p>
                     <a th:href="@{/venta/alta}" class="btn btn-outline-primary btn-sm">Registrar</a>
@@ -82,11 +76,10 @@
     </div>
 
     <!-- Accesos rápidos para el VENDEDOR -->
-    <div class="row g-4" sec:authorize="hasRole('VENDEDOR')">
+    <div class="row g-4 justify-content-center" sec:authorize="hasRole('VENDEDOR')">
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">➕</div>
                     <h6 class="card-title fw-bold mt-2">Registrar venta</h6>
                     <p class="card-text small text-muted">Capture la venta de su comercio</p>
                     <a th:href="@{/venta/alta}" class="btn btn-outline-primary btn-sm">Registrar</a>
@@ -96,7 +89,6 @@
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 shadow-sm border-0 text-center">
                 <div class="card-body p-4">
-                    <div class="fs-1">🧾</div>
                     <h6 class="card-title fw-bold mt-2">Mis ventas</h6>
                     <p class="card-text small text-muted">Histórico de sus ventas</p>
                     <a th:href="@{/venta/ver}" class="btn btn-outline-primary btn-sm">Ver ventas</a>
