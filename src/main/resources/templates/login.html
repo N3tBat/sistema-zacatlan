@@ -13,8 +13,16 @@
                 <div class="card-body p-4">
                     <h3 class="card-title text-center mb-4 fw-bold">Iniciar Sesión</h3>
 
-                    <!-- Mensajes de error -->
-                    <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                    <!-- Mensajes de error / avisos -->
+                    <div th:if="${param.expired}" class="alert alert-warning" role="alert">
+                        Su sesión ha expirado o no es válida. Inicie sesión nuevamente.
+                    </div>
+
+                    <div th:if="${loginError}" class="alert alert-danger" role="alert" th:text="${loginError}">
+                        Usuario o contraseña incorrectos.
+                    </div>
+
+                    <div th:if="${param.error} and ${loginError} == null" class="alert alert-danger" role="alert">
                         <span th:if="${session != null and session['SPRING_SECURITY_LAST_EXCEPTION'] != null}"
                               th:text="${session['SPRING_SECURITY_LAST_EXCEPTION'].message == 'User is disabled' ? 'Cuenta deshabilitada. No tiene acceso al sistema.' : 'Usuario o contraseña incorrectos.'}">
                             Usuario o contraseña incorrectos.
@@ -32,7 +40,8 @@
                     <form th:action="@{/login}" method="post">
                         <div class="mb-3">
                             <label for="username" class="form-label">Usuario</label>
-                            <input type="text" id="username" name="username" class="form-control" placeholder="Ingrese su usuario" required autofocus>
+                            <input type="text" id="username" name="username" class="form-control" placeholder="Ingrese su usuario"
+                                   th:value="${username}" required autofocus>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Contraseña</label>

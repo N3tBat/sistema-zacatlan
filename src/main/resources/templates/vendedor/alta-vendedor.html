@@ -12,6 +12,9 @@
             <!-- Alerta de error general (ej. username o email duplicado) -->
             <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
                 <span th:text="${error}">Error en la operación</span>
+                <ul th:if="${errorDetalles}" class="mb-0 mt-2">
+                    <li th:each="d : ${errorDetalles}" th:text="${d.value}">Detalle</li>
+                </ul>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 

@@ -16,6 +16,13 @@
                     </h4>
                 </div>
                 <div class="card-body p-4">
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <span th:text="${error}">Ocurrió un error</span>
+                        <ul th:if="${errorDetalles}" class="mb-0 mt-2">
+                            <li th:each="d : ${errorDetalles}" th:text="${d.value}">Detalle</li>
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                     <form th:action="@{/bloque/salvar}" th:object="${bloque}" method="post">
                         <input type="hidden" th:field="*{id}">
 

@@ -58,8 +58,8 @@
                                 <span th:unless="${p.bloqueNombre != null}" class="text-muted fst-italic">Sin bloque</span>
                             </td>
                             <td class="text-center">
-                                <span th:if="${p.formaVenta?.name() == 'BLOQUE'}" class="badge bg-info text-dark">BLOQUE</span>
-                                <span th:if="${p.formaVenta?.name() == 'UNIDAD'}" class="badge bg-secondary">UNIDAD</span>
+                                <span th:if="${p.formaVenta == 'BLOQUE'}" class="badge bg-info text-dark">BLOQUE</span>
+                                <span th:if="${p.formaVenta == 'UNIDAD'}" class="badge bg-secondary">UNIDAD</span>
                             </td>
                             <td class="text-end"
                                 th:text="${p.precioUnidad != null ? '$' + #numbers.formatDecimal(p.precioUnidad, 1, 2) : '—'}">

@@ -1,143 +1,150 @@
 package mx.fes.unam.controller;
 
-import jakarta.validation.Valid;
-import mx.fes.unam.model.entities.vendedor.VendedorDTO;
-import mx.fes.unam.security.RolEnum;
-import mx.fes.unam.service.BloqueService;
-import mx.fes.unam.service.VendedorService;
+import lombok.RequiredArgsConstructor;
+import mx.fes.unam.api.client.BackendApiException;
+import mx.fes.unam.api.client.BloqueApiClient;
+import mx.fes.unam.api.client.VendedorApiClient;
+import mx.fes.unam.api.dto.error.ApiError;
+import mx.fes.unam.api.dto.vendedor.VendedorRequest;
+import mx.fes.unam.api.dto.vendedor.VendedorResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/vendedor")
+@RequiredArgsConstructor
 public class VendedorController {
 
-    private final VendedorService vendedorService;
-    private final BloqueService bloqueService;
-
-    public VendedorController(VendedorService vendedorService, BloqueService bloqueService) {
-        this.vendedorService = vendedorService;
-        this.bloqueService = bloqueService;
-    }
+    private final VendedorApiClient vendedorApiClient;
+    private final BloqueApiClient bloqueApiClient;
 
     @GetMapping("/ver")
     public String ver(Model model) {
-        model.addAttribute("vendedores", vendedorService.listarVendedores());
+        List<VendedorResponse> vendedores = vendedorApiClient.listar();
+        model.addAttribute("vendedores", vendedores);
         return "vendedor/vendedor";
     }
 
     @GetMapping("/alta")
     public String alta(Model model) {
-        VendedorDTO dto = new VendedorDTO();
-        dto.setActivo(true);
-        model.addAttribute("vendedor", dto);
-        model.addAttribute("bloques", bloqueService.listarActivos());
+        VendedorResponse vendedor = new VendedorResponse();
+        vendedor.setActivo(true);
+        model.addAttribute("vendedor", vendedor);
+        model.addAttribute("bloques", bloqueApiClient.listarActivos());
         model.addAttribute("esEdicion", false);
         return "vendedor/alta-vendedor";
     }
 
     @GetMapping("/modificar/{id}")
-    public String modificar(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-        VendedorDTO dto = vendedorService.buscarPorId(id);
-        if (dto == null) {
-            redirectAttributes.addFlashAttribute("error", "El vendedor no fue encontrado.");
-            return "redirect:/vendedor/ver";
-        }
-        if (dto.getRol() == RolEnum.ADMIN) {
-            redirectAttributes.addFlashAttribute("error", "No se puede modificar un administrador desde este módulo.");
-            return "redirect:/vendedor/ver";
-        }
-
-        model.addAttribute("vendedor", dto);
-        model.addAttribute("bloques", bloqueService.listarActivos());
+    public String modificar(@PathVariable("id") Long id, Model model) {
+        VendedorResponse vendedor = vendedorApiClient.obtener(id);
+        model.addAttribute("vendedor", vendedor);
         model.addAttribute("esEdicion", true);
+        // en edición el bloque es de solo lectura (inmutable)
         return "vendedor/alta-vendedor";
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid @ModelAttribute("vendedor") VendedorDTO vendedorDTO,
+    public String salvar(@ModelAttribute("vendedor") VendedorResponse vendedor,
                          BindingResult bindingResult,
                          @RequestParam(name = "password", required = false) String password,
                          Model model,
                          RedirectAttributes redirectAttributes) {
-        boolean esEdicion = (vendedorDTO.getId() != null);
+        boolean esEdicion = vendedor != null && vendedor.getId() != null;
+        String passwordNormalizada = StringUtils.hasText(password) ? password : null;
 
-        if (!esEdicion && (password == null || password.trim().isEmpty())) {
-            model.addAttribute("passwordError", "La contraseña es obligatoria para nuevos vendedores.");
-            bindingResult.reject("password.required", "La contraseña es obligatoria para nuevos vendedores.");
-        }
-
-        if (bindingResult.hasErrors()) {
-            if (esEdicion) {
-                completarBloqueActual(vendedorDTO);
-            }
-            model.addAttribute("bloques", bloqueService.listarActivos());
-            model.addAttribute("esEdicion", esEdicion);
-            return "vendedor/alta-vendedor";
-        }
+        VendedorRequest request = new VendedorRequest(
+                vendedor != null ? vendedor.getNombre() : null,
+                vendedor != null ? vendedor.getApellidos() : null,
+                vendedor != null ? vendedor.getTelefono() : null,
+                vendedor != null ? vendedor.getEmail() : null,
+                vendedor != null ? vendedor.getUsername() : null,
+                passwordNormalizada,
+                esEdicion ? null : (vendedor != null ? vendedor.getBloqueId() : null)
+        );
 
         try {
-            vendedorService.guardar(vendedorDTO, password);
-            redirectAttributes.addFlashAttribute("exito",
-                    esEdicion ? "Vendedor actualizado exitosamente." : "Vendedor registrado exitosamente.");
-            return "redirect:/vendedor/ver";
-        } catch (IllegalArgumentException e) {
             if (esEdicion) {
-                completarBloqueActual(vendedorDTO);
+                vendedorApiClient.actualizar(vendedor.getId(), request);
+                redirectAttributes.addFlashAttribute("exito", "Vendedor actualizado correctamente.");
+            } else {
+                vendedorApiClient.crear(request);
+                redirectAttributes.addFlashAttribute("exito", "Vendedor creado correctamente.");
             }
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("bloques", bloqueService.listarActivos());
-            model.addAttribute("esEdicion", esEdicion);
-            return "vendedor/alta-vendedor";
-        }
-    }
-
-    // En edición el bloque se muestra como solo lectura; si el formulario se
-    // vuelve a mostrar por un error, recuperamos el bloque real del vendedor.
-    private void completarBloqueActual(VendedorDTO dto) {
-        if (dto.getId() == null) {
-            return;
-        }
-        VendedorDTO actual = vendedorService.buscarPorId(dto.getId());
-        if (actual != null) {
-            dto.setBloqueId(actual.getBloqueId());
-            dto.setBloqueNombre(actual.getBloqueNombre());
+            return "redirect:/vendedor/ver";
+        } catch (BackendApiException ex) {
+            if (ex.getStatus() == 400) {
+                aplicarErroresValidacion(ex, bindingResult, model);
+                model.addAttribute("esEdicion", esEdicion);
+                if (!esEdicion) {
+                    model.addAttribute("bloques", bloqueApiClient.listarActivos());
+                }
+                return "vendedor/alta-vendedor";
+            }
+            throw ex;
         }
     }
 
     @PostMapping("/desactivar/{id}")
     public String desactivar(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-        try {
-            vendedorService.desactivar(id);
-            redirectAttributes.addFlashAttribute("exito", "Vendedor desactivado exitosamente.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al desactivar el vendedor: " + e.getMessage());
-        }
+        vendedorApiClient.desactivar(id);
+        redirectAttributes.addFlashAttribute("exito", "Vendedor desactivado correctamente.");
         return "redirect:/vendedor/ver";
     }
 
     @PostMapping("/reactivar/{id}")
     public String reactivar(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-        try {
-            vendedorService.reactivar(id);
-            redirectAttributes.addFlashAttribute("exito", "Vendedor reactivado exitosamente.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al reactivar el vendedor: " + e.getMessage());
-        }
+        vendedorApiClient.reactivar(id);
+        redirectAttributes.addFlashAttribute("exito", "Vendedor reactivado correctamente.");
         return "redirect:/vendedor/ver";
     }
 
     @PostMapping("/eliminar/{id}")
     public String eliminar(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-        try {
-            vendedorService.eliminar(id);
-            redirectAttributes.addFlashAttribute("exito", "Vendedor eliminado exitosamente. Sus ventas históricas fueron preservadas.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar el vendedor: " + e.getMessage());
-        }
+        vendedorApiClient.eliminar(id);
+        redirectAttributes.addFlashAttribute("exito", "Vendedor eliminado correctamente.");
         return "redirect:/vendedor/ver";
+    }
+
+    private void aplicarErroresValidacion(BackendApiException ex, BindingResult bindingResult, Model model) {
+        ApiError apiError = ex.getApiError();
+        String mensaje = (apiError != null && apiError.getMensaje() != null && !apiError.getMensaje().isBlank())
+                ? apiError.getMensaje()
+                : "La petición contiene datos inválidos.";
+        model.addAttribute("error", mensaje);
+
+        if (apiError != null) {
+            Map<String, String> detalles = apiError.getDetalles();
+            if (detalles != null && !detalles.isEmpty()) {
+                model.addAttribute("errorDetalles", detalles);
+                for (Map.Entry<String, String> entry : detalles.entrySet()) {
+                    String field = entry.getKey();
+                    String msg = entry.getValue() != null ? entry.getValue() : mensaje;
+                    if ("password".equals(field)) {
+                        model.addAttribute("passwordError", msg);
+                        continue;
+                    }
+                    if (field != null && bindingResult.getTarget() != null) {
+                        try {
+                            bindingResult.rejectValue(field, "backend", msg);
+                        } catch (Exception ignored) {
+                            // campo no presente en el objeto del formulario
+                        }
+                    }
+                }
+            }
+        }
     }
 }

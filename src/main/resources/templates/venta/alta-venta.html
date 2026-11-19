@@ -18,8 +18,11 @@
                         <input type="hidden" th:field="*{id}">
 
                         <!-- Alerta de error de negocio -->
-                        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}">
-                            Error
+                        <div th:if="${error}" class="alert alert-danger" role="alert">
+                            <span th:text="${error}">Error</span>
+                            <ul th:if="${errorDetalles}" class="mb-0 mt-2">
+                                <li th:each="d : ${errorDetalles}" th:text="${d.value}">Detalle</li>
+                            </ul>
                         </div>
 
                         <!-- Vendedor -->
