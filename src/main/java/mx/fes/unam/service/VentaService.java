@@ -70,11 +70,16 @@ public class VentaService {
             throw new IllegalArgumentException("El precio aplicado debe ser mayor a cero.");
         }
 
+        BigDecimal total = calcularTotal(dto.getCantidad(), dto.getPrecioAplicado());
+        if (total.signum() <= 0) {
+            throw new IllegalArgumentException("El total de la venta no puede ser negativo ni cero.");
+        }
+
         VentaEntity entity = new VentaEntity();
         entity.setFecha(LocalDateTime.now());
         entity.setCantidad(dto.getCantidad());
         entity.setPrecioAplicado(dto.getPrecioAplicado());
-        entity.setTotal(calcularTotal(dto.getCantidad(), dto.getPrecioAplicado()));
+        entity.setTotal(total);
         entity.setVendedor(vendedor);
         entity.setVendedorNombre(vendedor.getNombre() + " " + vendedor.getApellidos());
         entity.setProducto(producto);
@@ -104,9 +109,14 @@ public class VentaService {
 
     @Transactional(readOnly = true)
     public List<VentaDTO> listarPorFecha(LocalDate fecha) {
-        LocalDateTime inicio = fecha.atStartOfDay();
-        LocalDateTime fin = fecha.atTime(LocalTime.MAX);
-        return ventaRepository.findVentasDelDiaConRelaciones(inicio, fin).stream()
+        return listarPorRango(fecha, fecha);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VentaDTO> listarPorRango(LocalDate fechaInicio, LocalDate fechaFin) {
+        LocalDateTime inicio = fechaInicio.atStartOfDay();
+        LocalDateTime fin = fechaFin.atTime(LocalTime.MAX);
+        return ventaRepository.findVentasEnRangoConRelaciones(inicio, fin).stream()
                 .map(ventaMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -161,6 +171,9 @@ public class VentaService {
         }
 
         BigDecimal totalNuevo = calcularTotal(dto.getCantidad(), dto.getPrecioAplicado());
+        if (totalNuevo.signum() <= 0) {
+            throw new IllegalArgumentException("El total de la venta no puede ser negativo ni cero.");
+        }
         if (venta.getTotal().compareTo(totalNuevo) != 0) {
             diff.append("total: ").append(venta.getTotal().toPlainString())
                     .append(" → ").append(totalNuevo.toPlainString());

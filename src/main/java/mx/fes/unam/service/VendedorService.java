@@ -54,13 +54,13 @@ public class VendedorService {
 
     @Transactional
     public VendedorDTO guardar(VendedorDTO dto, String password) {
-        BloqueEntity bloque = null;
-        if (dto.getBloqueId() != null) {
-            bloque = bloqueRepository.findById(dto.getBloqueId()).orElse(null);
-        }
-
         if (dto.getId() == null) {
             // ALTA
+            BloqueEntity bloque = null;
+            if (dto.getBloqueId() != null) {
+                bloque = bloqueRepository.findById(dto.getBloqueId()).orElse(null);
+            }
+
             if (vendedorRepository.existsByUsername(dto.getUsername())) {
                 throw new IllegalArgumentException("El nombre de usuario '" + dto.getUsername() + "' ya está registrado.");
             }
@@ -106,7 +106,9 @@ public class VendedorService {
             existing.setTelefono(dto.getTelefono());
             existing.setEmail(dto.getEmail());
             existing.setUsername(dto.getUsername());
-            existing.setBloque(bloque);
+
+            // El bloque asignado NO se puede cambiar al modificar un vendedor:
+            // se conserva el que ya tenía, ignorando cualquier valor enviado en el formulario.
 
             // Si llega password se actualiza con BCrypt; si llega vacío se conserva el hash actual
             if (password != null && !password.trim().isEmpty()) {

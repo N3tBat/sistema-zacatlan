@@ -32,6 +32,7 @@
                             <th scope="col" style="width: 60px;">ID</th>
                             <th scope="col">Nombre</th>
                             <th scope="col">Descripción</th>
+                            <th scope="col" style="width: 110px;">Bloque</th>
                             <th scope="col" style="width: 130px;" class="text-center">Forma de venta</th>
                             <th scope="col" style="width: 120px;" class="text-end">Precio unidad</th>
                             <th scope="col" style="width: 120px;" class="text-end">Precio bloque</th>
@@ -42,7 +43,7 @@
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(productos)}">
-                            <td colspan="9" class="text-center py-4 text-muted">No hay productos registrados.</td>
+                            <td colspan="10" class="text-center py-4 text-muted">No hay productos registrados.</td>
                         </tr>
                         <tr th:each="p : ${productos}">
                             <td class="fw-semibold" th:text="${p.id}">1</td>
@@ -50,6 +51,11 @@
                             <td class="text-muted small"
                                 th:text="${p.descripcion != null and !p.descripcion.isEmpty() ? p.descripcion : '—'}">
                                 Caja de manzana
+                            </td>
+                            <td>
+                                <span th:if="${p.bloqueNombre != null}" class="badge bg-light text-dark border"
+                                      th:text="${p.bloqueNombre}">Comida</span>
+                                <span th:unless="${p.bloqueNombre != null}" class="text-muted fst-italic">Sin bloque</span>
                             </td>
                             <td class="text-center">
                                 <span th:if="${p.formaVenta?.name() == 'BLOQUE'}" class="badge bg-info text-dark">BLOQUE</span>

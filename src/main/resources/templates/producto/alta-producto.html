@@ -48,6 +48,22 @@
                             </div>
                         </div>
 
+                        <!-- Bloque: espacio donde se ubica el producto -->
+                        <div class="mb-3">
+                            <label for="bloqueId" class="form-label">Bloque <span class="text-danger">*</span></label>
+                            <select id="bloqueId" class="form-select" th:field="*{bloqueId}" required
+                                    th:classappend="${#fields.hasErrors('bloqueId')} ? 'is-invalid' : ''">
+                                <option value="">-- Seleccione un bloque --</option>
+                                <option th:each="b : ${bloques}" th:value="${b.id}" th:text="${b.nombre}">
+                                    Comida
+                                </option>
+                            </select>
+                            <div class="form-text">Bloque del municipio donde se encuentra este producto.</div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('bloqueId')}" th:errors="*{bloqueId}">
+                                Error en bloque
+                            </div>
+                        </div>
+
                         <!-- Forma de venta: define qué campos se muestran -->
                         <div class="mb-3">
                             <label for="formaVenta" class="form-label">Forma de venta <span class="text-danger">*</span></label>

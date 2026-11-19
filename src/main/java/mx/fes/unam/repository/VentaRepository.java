@@ -21,5 +21,5 @@ public interface VentaRepository extends JpaRepository<VentaEntity, Long> {
     List<VentaEntity> findByFechaBetweenOrderByFechaDesc(LocalDateTime inicio, LocalDateTime fin);
 
     @Query("SELECT v FROM VentaEntity v LEFT JOIN FETCH v.vendedor LEFT JOIN FETCH v.producto WHERE v.fecha BETWEEN :inicio AND :fin ORDER BY v.fecha DESC")
-    List<VentaEntity> findVentasDelDiaConRelaciones(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+    List<VentaEntity> findVentasEnRangoConRelaciones(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 }

@@ -172,6 +172,16 @@
     inputCantidad.addEventListener('input', actualizarTotal);
     inputPrecio.addEventListener('input', actualizarTotal);
 
+    // No se permiten ventas negativas ni con cantidad/precio en cero
+    document.querySelector('form').addEventListener('submit', function (event) {
+        const cantidad = parseFloat(inputCantidad.value);
+        const precio = parseFloat(inputPrecio.value);
+        if (!(cantidad > 0) || !(precio > 0)) {
+            event.preventDefault();
+            alert('La cantidad y el precio aplicado deben ser mayores a cero. No se permiten ventas negativas.');
+        }
+    });
+
     // Estado inicial (también restaura la selección al volver de un error)
     actualizarPorProducto();
     actualizarTotal();

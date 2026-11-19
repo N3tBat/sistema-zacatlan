@@ -20,6 +20,8 @@ public class ProductoMapper {
                 .precioBloque(entity.getPrecioBloque())
                 .unidadesPorBloque(entity.getUnidadesPorBloque())
                 .activo(entity.getActivo())
+                .bloqueId(entity.getBloque() != null ? entity.getBloque().getId() : null)
+                .bloqueNombre(entity.getBloque() != null ? entity.getBloque().getNombre() : null)
                 .build();
     }
 

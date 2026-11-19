@@ -71,6 +71,9 @@ public class VendedorController {
         }
 
         if (bindingResult.hasErrors()) {
+            if (esEdicion) {
+                completarBloqueActual(vendedorDTO);
+            }
             model.addAttribute("bloques", bloqueService.listarActivos());
             model.addAttribute("esEdicion", esEdicion);
             return "vendedor/alta-vendedor";
@@ -82,10 +85,26 @@ public class VendedorController {
                     esEdicion ? "Vendedor actualizado exitosamente." : "Vendedor registrado exitosamente.");
             return "redirect:/vendedor/ver";
         } catch (IllegalArgumentException e) {
+            if (esEdicion) {
+                completarBloqueActual(vendedorDTO);
+            }
             model.addAttribute("error", e.getMessage());
             model.addAttribute("bloques", bloqueService.listarActivos());
             model.addAttribute("esEdicion", esEdicion);
             return "vendedor/alta-vendedor";
+        }
+    }
+
+    // En edición el bloque se muestra como solo lectura; si el formulario se
+    // vuelve a mostrar por un error, recuperamos el bloque real del vendedor.
+    private void completarBloqueActual(VendedorDTO dto) {
+        if (dto.getId() == null) {
+            return;
+        }
+        VendedorDTO actual = vendedorService.buscarPorId(dto.getId());
+        if (actual != null) {
+            dto.setBloqueId(actual.getBloqueId());
+            dto.setBloqueNombre(actual.getBloqueNombre());
         }
     }
 

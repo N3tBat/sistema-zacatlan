@@ -3,13 +3,14 @@
 -- ==============================================================================
 
 -- SECCIÓN PERSONA A: bloques
-INSERT IGNORE INTO bloques (id, nombre, descripcion, activo) VALUES
-(1, 'Zona Centro', 'Área comercial del primer cuadro del centro histórico de Zacatlán', 1),
-(2, 'Mercado Municipal', 'Locales y pasillos dentro del Mercado Revolución', 1),
-(3, 'Sección Manzanas y Sidra', 'Corredor tradicional de productores artesanales de manzana, sidra y licores', 1),
-(4, 'Tianguis del Domingo', 'Puestos semifijos y comerciantes de la explanada dominical', 1),
-(5, 'Mirador y Reloj Floral', 'Zona turística del paseo de la barranca y el reloj floral', 1),
-(6, 'Sección Temporal', 'Módulos temporales para ferias y eventos especiales (sin asignaciones activas)', 0);
+-- Los bloques son los espacios donde se ubican los productos y donde trabajan los vendedores.
+-- Se mantienen exactamente cuatro; el bloque elegido al registrar un vendedor no se puede cambiar.
+INSERT INTO bloques (id, nombre, descripcion, activo) VALUES
+(1, 'Comida', 'Alimentos y productos de consumo elaborados en la región', 1),
+(2, 'Textiles', 'Ropa, telas y artículos de fibra producidos en el municipio', 1),
+(3, 'Artesanías', 'Productos artesanales tradicionales: sidra, mermeladas, ate y vinos de fruta', 1),
+(4, 'Servicios', 'Servicios turísticos, talleres y atención al visitante', 1)
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), descripcion = VALUES(descripcion), activo = VALUES(activo);
 
 -- SECCIÓN PERSONA A: administradores y vendedores
 -- Contraseña admin123 (BCrypt): $2a$10$O7IAl9Xelw.bnTHkRC5joOPeZIgFGf2Dluv07WeVNSBT4ZsmVMoc6
@@ -31,23 +32,31 @@ INSERT IGNORE INTO vendedor (id, nombre, apellidos, telefono, email, username, p
 (10, 'Ana', 'Gómez Aguilar', '7971012348', 'vendedor8@ejemplo.com', 'vendedor8', '$2a$10$tFwa5DQMkxUXr4DWJScJsuIq2Ozb1V3zAVz/JY2YpUMs9kcdGAFrq', 'VENDEDOR', 1, '2026-10-14 16:30:00', NULL, 4),
 
 -- Vendedores inactivos (vendedor9 y vendedor10)
-(11, 'Fernando', 'Ortiz Vargas', '7971012349', 'vendedor9@ejemplo.com', 'vendedor9', '$2a$10$tFwa5DQMkxUXr4DWJScJsuIq2Ozb1V3zAVz/JY2YpUMs9kcdGAFrq', 'VENDEDOR', 0, '2026-10-18 10:00:00', '2026-11-04 15:30:00', 5),
-(12, 'Patricia', 'Torres Mendoza', '7971012350', 'vendedor10@ejemplo.com', 'vendedor10', '$2a$10$tFwa5DQMkxUXr4DWJScJsuIq2Ozb1V3zAVz/JY2YpUMs9kcdGAFrq', 'VENDEDOR', 0, '2026-10-25 11:15:00', '2026-11-08 17:00:00', 5);
+(11, 'Fernando', 'Ortiz Vargas', '7971012349', 'vendedor9@ejemplo.com', 'vendedor9', '$2a$10$tFwa5DQMkxUXr4DWJScJsuIq2Ozb1V3zAVz/JY2YpUMs9kcdGAFrq', 'VENDEDOR', 0, '2026-10-18 10:00:00', '2026-11-04 15:30:00', 4),
+(12, 'Patricia', 'Torres Mendoza', '7971012350', 'vendedor10@ejemplo.com', 'vendedor10', '$2a$10$tFwa5DQMkxUXr4DWJScJsuIq2Ozb1V3zAVz/JY2YpUMs9kcdGAFrq', 'VENDEDOR', 0, '2026-10-25 11:15:00', '2026-11-08 17:00:00', 4);
+
+-- Convergencia para bases de datos que ya tenían los seis bloques anteriores.
+UPDATE vendedor SET bloque_id = 4 WHERE bloque_id IN (5, 6);
+DELETE FROM bloques WHERE id IN (5, 6);
 
 -- SECCIÓN PERSONA B: productos y ventas (agregar debajo de esta línea)
 
--- Productos del municipio: mezcla de forma de venta BLOQUE y UNIDAD
-INSERT IGNORE INTO producto (id, nombre, descripcion, forma_venta, precio_unidad, precio_bloque, unidades_por_bloque, activo) VALUES
-(1, 'Manzana Royale', 'Caja de manzana royale de huerta local', 'BLOQUE', NULL, 450.00, 20, 1),
-(2, 'Sidra Natural', 'Caja de sidra natural artesanal', 'BLOQUE', NULL, 600.00, 12, 1),
-(3, 'Nuez Limpia', 'Costal de nuez limpia de la región', 'BLOQUE', NULL, 850.00, 25, 1),
-(4, 'Pan de Huevo', 'Pieza de pan dulce tradicional', 'UNIDAD', 15.00, NULL, NULL, 1),
-(5, 'Tamales de Rajas', 'Tamal de rajas con queso por pieza', 'UNIDAD', 25.00, NULL, NULL, 1),
-(6, 'Café de Altura', 'Bolsa de 250 g de café tostado', 'UNIDAD', 90.00, NULL, NULL, 1),
-(7, 'Mermelada de Manzana', 'Frasco de mermelada artesanal de 500 g', 'UNIDAD', 70.00, NULL, NULL, 1),
-(8, 'Queso Fresco', 'Pieza de queso fresco de la región', 'UNIDAD', 120.00, NULL, NULL, 1),
-(9, 'Vino de Frutas', 'Caja con 6 botellas de vino de frutas', 'BLOQUE', NULL, 720.00, 6, 1),
-(10, 'Ate de Manzana', 'Caja con 10 barras de ate tradicional', 'BLOQUE', NULL, 350.00, 10, 1);
+-- Productos del municipio: mezcla de forma de venta BLOQUE y UNIDAD, cada uno en su bloque.
+INSERT IGNORE INTO producto (id, nombre, descripcion, forma_venta, precio_unidad, precio_bloque, unidades_por_bloque, activo, bloque_id) VALUES
+(1, 'Manzana Royale', 'Caja de manzana royale de huerta local', 'BLOQUE', NULL, 450.00, 20, 1, 1),
+(2, 'Sidra Natural', 'Caja de sidra natural artesanal', 'BLOQUE', NULL, 600.00, 12, 1, 3),
+(3, 'Nuez Limpia', 'Costal de nuez limpia de la región', 'BLOQUE', NULL, 850.00, 25, 1, 1),
+(4, 'Pan de Huevo', 'Pieza de pan dulce tradicional', 'UNIDAD', 15.00, NULL, NULL, 1, 1),
+(5, 'Tamales de Rajas', 'Tamal de rajas con queso por pieza', 'UNIDAD', 25.00, NULL, NULL, 1, 1),
+(6, 'Café de Altura', 'Bolsa de 250 g de café tostado', 'UNIDAD', 90.00, NULL, NULL, 1, 1),
+(7, 'Mermelada de Manzana', 'Frasco de mermelada artesanal de 500 g', 'UNIDAD', 70.00, NULL, NULL, 1, 3),
+(8, 'Queso Fresco', 'Pieza de queso fresco de la región', 'UNIDAD', 120.00, NULL, NULL, 1, 1),
+(9, 'Vino de Frutas', 'Caja con 6 botellas de vino de frutas', 'BLOQUE', NULL, 720.00, 6, 1, 3),
+(10, 'Ate de Manzana', 'Caja con 10 barras de ate tradicional', 'BLOQUE', NULL, 350.00, 10, 1, 3);
+
+-- Convergencia: asignar bloque a productos que ya existían antes de agregar la columna.
+UPDATE producto SET bloque_id = 1 WHERE id IN (1, 3, 4, 5, 6, 8) AND bloque_id IS NULL;
+UPDATE producto SET bloque_id = 3 WHERE id IN (2, 7, 9, 10) AND bloque_id IS NULL;
 
 -- Ventas:
 --  * NOW() garantiza ventas "de hoy" en cada arranque (para el reporte diario)

@@ -2,6 +2,7 @@ package mx.fes.unam.model.entities.producto;
 
 import jakarta.persistence.*;
 import lombok.*;
+import mx.fes.unam.model.entities.bloque.BloqueEntity;
 
 import java.math.BigDecimal;
 
@@ -39,4 +40,10 @@ public class ProductoEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bloque_id", nullable = true)
+    private BloqueEntity bloque;
 }

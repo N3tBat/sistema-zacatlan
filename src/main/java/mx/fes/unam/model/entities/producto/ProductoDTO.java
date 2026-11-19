@@ -40,4 +40,9 @@ public class ProductoDTO {
 
     @Builder.Default
     private Boolean activo = true;
+
+    @NotNull(message = "Debe seleccionar un bloque")
+    private Long bloqueId;
+
+    private String bloqueNombre;
 }
