@@ -10,4 +10,6 @@ import java.util.List;
 public interface ProductoRepository extends JpaRepository<ProductoEntity, Long> {
 
     List<ProductoEntity> findByActivoTrue();
+
+    boolean existsByBloqueId(Long bloqueId);
 }

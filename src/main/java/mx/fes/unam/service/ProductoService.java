@@ -1,8 +1,10 @@
 package mx.fes.unam.service;
 
+import mx.fes.unam.model.entities.bloque.BloqueEntity;
 import mx.fes.unam.model.entities.producto.FormaVenta;
 import mx.fes.unam.model.entities.producto.ProductoDTO;
 import mx.fes.unam.model.entities.producto.ProductoEntity;
+import mx.fes.unam.repository.BloqueRepository;
 import mx.fes.unam.repository.ProductoRepository;
 import mx.fes.unam.repository.VentaRepository;
 import org.springframework.stereotype.Service;
@@ -16,13 +18,16 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final VentaRepository ventaRepository;
+    private final BloqueRepository bloqueRepository;
     private final ProductoMapper productoMapper;
 
     public ProductoService(ProductoRepository productoRepository,
                            VentaRepository ventaRepository,
+                           BloqueRepository bloqueRepository,
                            ProductoMapper productoMapper) {
         this.productoRepository = productoRepository;
         this.ventaRepository = ventaRepository;
+        this.bloqueRepository = bloqueRepository;
         this.productoMapper = productoMapper;
     }
 
@@ -50,10 +55,12 @@ public class ProductoService {
     @Transactional
     public ProductoDTO guardar(ProductoDTO dto) {
         validarFormaVenta(dto);
+        BloqueEntity bloque = resolverBloque(dto);
 
         if (dto.getId() == null) {
             // ALTA
             ProductoEntity entity = productoMapper.toEntity(dto);
+            entity.setBloque(bloque);
             ProductoEntity guardado = productoRepository.save(entity);
             return productoMapper.toDto(guardado);
         }
@@ -69,6 +76,7 @@ public class ProductoService {
         existing.setPrecioBloque(dto.getPrecioBloque());
         existing.setUnidadesPorBloque(dto.getUnidadesPorBloque());
         existing.setActivo(dto.getActivo() != null ? dto.getActivo() : existing.getActivo());
+        existing.setBloque(bloque);
 
         ProductoEntity guardado = productoRepository.save(existing);
         return productoMapper.toDto(guardado);
@@ -83,6 +91,18 @@ public class ProductoService {
             throw new IllegalStateException("No se puede eliminar el producto porque tiene ventas registradas.");
         }
         productoRepository.deleteById(id);
+    }
+
+    private BloqueEntity resolverBloque(ProductoDTO dto) {
+        if (dto.getBloqueId() == null) {
+            throw new IllegalArgumentException("Debe seleccionar un bloque.");
+        }
+        BloqueEntity bloque = bloqueRepository.findById(dto.getBloqueId())
+                .orElseThrow(() -> new IllegalArgumentException("El bloque seleccionado no existe."));
+        if (!Boolean.TRUE.equals(bloque.getActivo())) {
+            throw new IllegalArgumentException("El bloque seleccionado no está activo.");
+        }
+        return bloque;
     }
 
     private void validarFormaVenta(ProductoDTO dto) {

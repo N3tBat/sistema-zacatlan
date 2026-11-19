@@ -8,29 +8,52 @@
 
 <main class="container my-4">
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h4 class="m-0 fw-bold text-primary">Reporte Diario de Ventas</h4>
-            <!-- Filtro de fecha (default: hoy) + descarga del PDF -->
-            <form th:action="@{/reporte/diario}" method="get" class="d-flex gap-2 align-items-center">
-                <input type="date" class="form-control" name="fecha" th:value="${fecha}">
-                <button type="submit" class="btn btn-primary">Ver reporte</button>
-            </form>
+        <div class="card-header bg-white py-3">
+            <h4 class="m-0 fw-bold text-primary">Reporte de Ventas por Rango de Fechas</h4>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body border-bottom">
+            <!-- Filtro por rango de fechas + descarga del PDF -->
+            <form th:action="@{/reporte/diario}" method="get" class="row g-2 align-items-end">
+                <div class="col-sm-5 col-md-4">
+                    <label for="fechaInicio" class="form-label">Fecha inicial</label>
+                    <input type="date" id="fechaInicio" class="form-control" name="fechaInicio"
+                           th:value="${fechaInicio}">
+                </div>
+                <div class="col-sm-5 col-md-4">
+                    <label for="fechaFin" class="form-label">Fecha final</label>
+                    <input type="date" id="fechaFin" class="form-control" name="fechaFin"
+                           th:value="${fechaFin}">
+                </div>
+                <div class="col-sm-2 col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Ver reporte</button>
+                    <a class="btn btn-danger" th:if="${errorRango == null}"
+                       th:href="@{/reporte/diario/pdf(fechaInicio=${fechaInicio}, fechaFin=${fechaFin})}">
+                        Descargar PDF
+                    </a>
+                    <button type="button" class="btn btn-danger" th:unless="${errorRango == null}" disabled>
+                        Descargar PDF
+                    </button>
+                </div>
+            </form>
+
+            <div th:if="${errorRango}" class="alert alert-danger mt-3 mb-0" role="alert" th:text="${errorRango}">
+                La fecha inicial no puede ser mayor que la fecha final.
+            </div>
+            <div th:if="${infoFechas}" class="alert alert-info mt-3 mb-0" role="alert" th:text="${infoFechas}">
+                No se indicaron fechas; se muestra el día de hoy.
+            </div>
+        </div>
+        <div class="card-body p-0" th:unless="${errorRango}">
             <div class="p-3 bg-white border-bottom">
-                <span class="fw-semibold">Fecha del reporte:</span>
-                <span th:text="${fechaFormateada}">10/11/2026</span>
-                <a class="btn btn-danger btn-sm float-end"
-                   th:href="@{/reporte/diario/pdf(fecha=${fecha})}">
-                    Descargar PDF
-                </a>
+                <span class="fw-semibold">Rango del reporte:</span>
+                <span th:text="${rangoFormateado}">01/11/2026 al 12/11/2026</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th scope="col" style="width: 60px;">ID</th>
-                            <th scope="col" style="width: 160px;">Hora</th>
+                            <th scope="col" style="width: 170px;">Fecha y hora</th>
                             <th scope="col">Vendedor</th>
                             <th scope="col">Bloque</th>
                             <th scope="col">Producto</th>
@@ -41,12 +64,14 @@
                     <tbody>
                         <tr th:if="${#lists.isEmpty(ventas)}">
                             <td colspan="7" class="text-center py-4 text-muted">
-                                No hay ventas registradas para el día seleccionado.
+                                No hay ventas registradas para el rango de fechas seleccionado.
                             </td>
                         </tr>
                         <tr th:each="v : ${ventas}">
                             <td class="fw-semibold" th:text="${v.id}">1</td>
-                            <td th:text="${v.fecha != null ? #temporals.format(v.fecha, 'HH:mm') : '—'}">12:00</td>
+                            <td th:text="${v.fecha != null ? #temporals.format(v.fecha, 'dd/MM/yyyy HH:mm') : '—'}">
+                                10/11/2026 12:00
+                            </td>
                             <!-- Snapshot del vendedor: se muestra aunque ya esté borrado -->
                             <td th:text="${v.vendedorNombre != null ? v.vendedorNombre : '—'}">Carlos Hernández López</td>
                             <td th:text="${v.bloqueNombre != null ? v.bloqueNombre : '—'}">Zona Centro</td>
@@ -57,8 +82,8 @@
                     </tbody>
                     <tfoot class="table-light">
                         <tr>
-                            <td colspan="6" class="fw-bold text-end">TOTAL DEL DÍA</td>
-                            <td class="fw-bold text-end" th:text="${'$' + #numbers.formatDecimal(totalDia, 1, 2)}">$1,575.00</td>
+                            <td colspan="6" class="fw-bold text-end">TOTAL DEL PERÍODO</td>
+                            <td class="fw-bold text-end" th:text="${'$' + #numbers.formatDecimal(totalPeriodo, 1, 2)}">$1,575.00</td>
                         </tr>
                     </tfoot>
                 </table>

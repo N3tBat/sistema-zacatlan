@@ -1,5 +1,6 @@
 package mx.fes.unam;
 
+import mx.fes.unam.model.entities.bloque.BloqueDTO;
 import mx.fes.unam.model.entities.vendedor.VendedorDTO;
 import mx.fes.unam.security.RolEnum;
 import mx.fes.unam.security.VendedorDetailsService;
@@ -84,19 +85,30 @@ class PersonaATests {
     @DisplayName("Bloque con vendedores asignados rechaza la eliminación")
     void testEliminarBloqueConVendedores() {
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
-            bloqueService.eliminar(1L); // Zona Centro tiene vendedor1 y vendedor2
+            bloqueService.eliminar(2L); // Textiles tiene vendedores asignados y aún no tiene productos
         });
         assertTrue(ex.getMessage().contains("tiene vendedores asignados"));
     }
 
     @Test
-    @Transactional
-    @DisplayName("Bloque sin vendedores (Bloque 6) se elimina exitosamente")
-    void testEliminarBloqueVacio() {
-        assertDoesNotThrow(() -> {
-            bloqueService.eliminar(6L);
+    @DisplayName("Bloque con productos asignados rechaza la eliminación")
+    void testEliminarBloqueConProductos() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            bloqueService.eliminar(1L); // Comida tiene productos y vendedores asignados
         });
-        assertNull(bloqueService.buscarPorId(6L));
+        assertTrue(ex.getMessage().contains("tiene productos asignados"));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Bloque sin vendedores ni productos se elimina exitosamente")
+    void testEliminarBloqueVacio() {
+        BloqueDTO temporal = bloqueService.guardar(BloqueDTO.builder()
+                .nombre("Bloque Temporal de Prueba")
+                .activo(true)
+                .build());
+        assertDoesNotThrow(() -> bloqueService.eliminar(temporal.getId()));
+        assertNull(bloqueService.buscarPorId(temporal.getId()));
     }
 
     @Test
@@ -114,6 +126,23 @@ class PersonaATests {
         v1 = vendedorService.buscarPorId(3L);
         assertTrue(v1.getActivo());
         assertNull(v1.getFechaBaja());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Al modificar un vendedor no se puede cambiar el bloque asignado")
+    void testModificarVendedorNoCambiaBloque() {
+        // El vendedor 3 (vendedor1) tiene asignado el bloque 1 (Comida)
+        VendedorDTO dto = vendedorService.buscarPorId(3L);
+        dto.setBloqueId(2L); // intento de cambio de bloque
+        dto.setNombre("Carlos Modificado");
+
+        vendedorService.guardar(dto, null);
+
+        VendedorDTO actualizado = vendedorService.buscarPorId(3L);
+        assertEquals("Carlos Modificado", actualizado.getNombre());
+        assertEquals(Long.valueOf(1L), actualizado.getBloqueId(),
+                "El bloque debe conservarse aunque el formulario envíe otro distinto");
     }
 
     @Test

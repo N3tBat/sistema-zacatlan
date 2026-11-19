@@ -106,14 +106,27 @@
                             <!-- Bloque -->
                             <div class="col-12">
                                 <label for="bloqueId" class="form-label">Bloque Asignado</label>
-                                <select id="bloqueId" th:field="*{bloqueId}" class="form-select">
-                                    <option value="">-- Sin bloque asignado --</option>
-                                    <option th:each="b : ${bloques}" th:value="${b.id}" th:text="${b.nombre}">
-                                        Zona Centro
-                                    </option>
-                                </select>
-                                <div class="form-text">
-                                    Solo se muestran bloques activos disponibles para asignación.
+
+                                <!-- En edición el bloque es de solo lectura: no se puede cambiar -->
+                                <div th:if="${esEdicion}">
+                                    <input type="text" id="bloqueId" class="form-control bg-light" readonly
+                                           th:value="${vendedor.bloqueNombre != null ? vendedor.bloqueNombre : 'Sin bloque asignado'}">
+                                    <div class="form-text">
+                                        El bloque asignado no puede modificarse una vez registrado el vendedor.
+                                    </div>
+                                </div>
+
+                                <!-- En alta se elige el bloque -->
+                                <div th:unless="${esEdicion}">
+                                    <select id="bloqueId" th:field="*{bloqueId}" class="form-select">
+                                        <option value="">-- Sin bloque asignado --</option>
+                                        <option th:each="b : ${bloques}" th:value="${b.id}" th:text="${b.nombre}">
+                                            Zona Centro
+                                        </option>
+                                    </select>
+                                    <div class="form-text">
+                                        Solo se muestran bloques activos disponibles para asignación.
+                                    </div>
                                 </div>
                             </div>
                         </div>

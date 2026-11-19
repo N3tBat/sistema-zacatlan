@@ -2,6 +2,7 @@ package mx.fes.unam.controller;
 
 import jakarta.validation.Valid;
 import mx.fes.unam.model.entities.producto.ProductoDTO;
+import mx.fes.unam.service.BloqueService;
 import mx.fes.unam.service.ProductoService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +15,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProductoController {
 
     private final ProductoService productoService;
+    private final BloqueService bloqueService;
 
-    public ProductoController(ProductoService productoService) {
+    public ProductoController(ProductoService productoService, BloqueService bloqueService) {
         this.productoService = productoService;
+        this.bloqueService = bloqueService;
     }
 
     @GetMapping("/ver")
@@ -30,6 +33,7 @@ public class ProductoController {
         ProductoDTO dto = new ProductoDTO();
         model.addAttribute("producto", dto);
         model.addAttribute("esEdicion", false);
+        model.addAttribute("bloques", bloqueService.listarActivos());
         return "producto/alta-producto";
     }
 
@@ -42,6 +46,7 @@ public class ProductoController {
         }
         model.addAttribute("producto", dto);
         model.addAttribute("esEdicion", true);
+        model.addAttribute("bloques", bloqueService.listarActivos());
         return "producto/alta-producto";
     }
 
@@ -54,6 +59,7 @@ public class ProductoController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("esEdicion", esEdicion);
+            model.addAttribute("bloques", bloqueService.listarActivos());
             return "producto/alta-producto";
         }
 
@@ -65,6 +71,7 @@ public class ProductoController {
         } catch (IllegalArgumentException | IllegalStateException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("esEdicion", esEdicion);
+            model.addAttribute("bloques", bloqueService.listarActivos());
             return "producto/alta-producto";
         }
     }

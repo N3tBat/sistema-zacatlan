@@ -1,5 +1,7 @@
 package mx.fes.unam;
 
+import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.parser.PdfTextExtractor;
 import mx.fes.unam.model.entities.producto.ProductoDTO;
 import mx.fes.unam.model.entities.venta.VentaDTO;
 import mx.fes.unam.service.PdfVentaService;
@@ -38,6 +40,7 @@ class PersonaBTests {
                 .nombre("Producto prueba")
                 .formaVenta(mx.fes.unam.model.entities.producto.FormaVenta.UNIDAD)
                 .precioUnidad(null)
+                .bloqueId(1L)
                 .activo(true)
                 .build();
         assertThrows(IllegalArgumentException.class, () -> productoService.guardar(dto));
@@ -50,6 +53,7 @@ class PersonaBTests {
                 .nombre("Producto prueba")
                 .formaVenta(mx.fes.unam.model.entities.producto.FormaVenta.BLOQUE)
                 .precioBloque(null)
+                .bloqueId(1L)
                 .activo(true)
                 .build();
         assertThrows(IllegalArgumentException.class, () -> productoService.guardar(dto));
@@ -60,6 +64,43 @@ class PersonaBTests {
     void testEliminarProductoConVentas() {
         // El producto 1 (Manzana Royale) tiene ventas en data.sql
         assertThrows(IllegalStateException.class, () -> productoService.eliminar(1L));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("El producto se guarda con su bloque y el bloque se puede cambiar al modificarlo")
+    void testProductoConBloque() {
+        ProductoDTO dto = ProductoDTO.builder()
+                .nombre("Producto con bloque")
+                .formaVenta(mx.fes.unam.model.entities.producto.FormaVenta.UNIDAD)
+                .precioUnidad(new BigDecimal("10.00"))
+                .bloqueId(1L)
+                .activo(true)
+                .build();
+
+        ProductoDTO guardado = productoService.guardar(dto);
+        assertEquals(Long.valueOf(1L), guardado.getBloqueId());
+        assertEquals("Comida", guardado.getBloqueNombre());
+
+        guardado.setBloqueId(2L);
+        ProductoDTO actualizado = productoService.guardar(guardado);
+        assertEquals(Long.valueOf(2L), actualizado.getBloqueId());
+        assertEquals("Textiles", actualizado.getBloqueNombre());
+    }
+
+    @Test
+    @DisplayName("No se puede guardar un producto sin bloque o con un bloque inexistente")
+    void testProductoRequiereBloqueValido() {
+        ProductoDTO sinBloque = ProductoDTO.builder()
+                .nombre("Producto sin bloque")
+                .formaVenta(mx.fes.unam.model.entities.producto.FormaVenta.UNIDAD)
+                .precioUnidad(new BigDecimal("10.00"))
+                .activo(true)
+                .build();
+        assertThrows(IllegalArgumentException.class, () -> productoService.guardar(sinBloque));
+
+        sinBloque.setBloqueId(999L);
+        assertThrows(IllegalArgumentException.class, () -> productoService.guardar(sinBloque));
     }
 
     // ------------------------------------------------------------------
@@ -99,6 +140,27 @@ class PersonaBTests {
         assertEquals(0, guardada.getTotal().compareTo(new BigDecimal("45.00"))); // calculado por el servidor
         assertEquals("Carlos Hernández López", guardada.getVendedorNombre());    // snapshot
         assertEquals("Pan de Huevo", guardada.getProductoNombre());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("No se pueden registrar ventas con cantidad o precio negativos")
+    void testRechazarVentaNegativa() {
+        VentaDTO cantidadNegativa = VentaDTO.builder()
+                .vendedorId(3L)
+                .productoId(4L)
+                .cantidad(-2)
+                .precioAplicado(new BigDecimal("15.00"))
+                .build();
+        assertThrows(IllegalArgumentException.class, () -> ventaService.registrar(cantidadNegativa));
+
+        VentaDTO precioNegativo = VentaDTO.builder()
+                .vendedorId(3L)
+                .productoId(4L)
+                .cantidad(2)
+                .precioAplicado(new BigDecimal("-15.00"))
+                .build();
+        assertThrows(IllegalArgumentException.class, () -> ventaService.registrar(precioNegativo));
     }
 
     @Test
@@ -163,5 +225,20 @@ class PersonaBTests {
         assertEquals('P', pdf[1]);
         assertEquals('D', pdf[2]);
         assertEquals('F', pdf[3]);
+    }
+
+    @Test
+    @DisplayName("El PDF incluye encabezado institucional, periodo y paginación")
+    void testPdfReportePresentacion() throws Exception {
+        List<VentaDTO> hoy = ventaService.listarPorFecha(java.time.LocalDate.now());
+        byte[] pdf = pdfVentaService.generatePdf(hoy, "Reporte de Ventas del 18/11/2026",
+                "TOTAL DEL DÍA", "18/11/2026");
+
+        try (PdfReader reader = new PdfReader(pdf)) {
+            String texto = new PdfTextExtractor(reader).getTextFromPage(1);
+            assertTrue(texto.contains("MUNICIPIO DE ZACATL"), "Debe incluir el encabezado del municipio");
+            assertTrue(texto.contains("Periodo:"), "Debe incluir el rango del reporte");
+            assertTrue(texto.contains("Página 1"), "Debe incluir el número de página");
+        }
     }
 }

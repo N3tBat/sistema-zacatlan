@@ -3,6 +3,7 @@ package mx.fes.unam.service;
 import mx.fes.unam.model.entities.bloque.BloqueDTO;
 import mx.fes.unam.model.entities.bloque.BloqueEntity;
 import mx.fes.unam.repository.BloqueRepository;
+import mx.fes.unam.repository.ProductoRepository;
 import mx.fes.unam.repository.VendedorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +16,16 @@ public class BloqueService {
 
     private final BloqueRepository bloqueRepository;
     private final VendedorRepository vendedorRepository;
+    private final ProductoRepository productoRepository;
     private final BloqueMapper bloqueMapper;
 
     public BloqueService(BloqueRepository bloqueRepository,
                          VendedorRepository vendedorRepository,
+                         ProductoRepository productoRepository,
                          BloqueMapper bloqueMapper) {
         this.bloqueRepository = bloqueRepository;
         this.vendedorRepository = vendedorRepository;
+        this.productoRepository = productoRepository;
         this.bloqueMapper = bloqueMapper;
     }
 
@@ -58,6 +62,9 @@ public class BloqueService {
 
     @Transactional
     public void eliminar(Long id) {
+        if (productoRepository.existsByBloqueId(id)) {
+            throw new IllegalStateException("No se puede eliminar el bloque porque tiene productos asignados.");
+        }
         if (vendedorRepository.existsByBloqueId(id)) {
             throw new IllegalStateException("No se puede eliminar el bloque porque tiene vendedores asignados.");
         }
